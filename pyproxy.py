@@ -273,14 +273,31 @@ accounts = [
 proxys = []
 # url = "https://www.sslproxies.org/"
 # url = "http://www.xicidaili.com/nn/"
-url = "http://haoip.cc/tiqu.htm"
-headers = {
-	'User-agent': user_agents[0]
-}
-response = requests.get(url, headers=headers)
+# url = "http://haoip.cc/tiqu.htm"
+# headers = {
+# 	'User-agent': user_agents[0]
+# }
+# response = requests.get(url, headers=headers)
 # html_etree = etree.HTML(response.content)
 # proxys = ["{}:{}".format(tr[1].text, tr[2].text) for index, tr in enumerate(html_etree.xpath("//table[@id='ip_list']/tr"))][1:]
-proxys = [ip.strip() for ip in re.findall(r'r/>(.*?)<b', response.text, re.S)]
+# proxys = [ip.strip() for ip in re.findall(r'r/>(.*?)<b', response.text, re.S)]
+# proxys = [
+# 	'54.187.52.159:8080',
+# 	'54.187.52.159:3128',
+# 	'107.21.56.41:80'
+# ]
+proxys = [
+	'5.2.74.91:1080',
+	'107.174.68.214:1080',
+	'107.155.113.159:1080',
+	'5.189.152.50:3129',
+	'187.53.61.105:3128',
+	'179.191.103.214:80',
+	'95.165.165.27:8080',
+	'94.177.251.124:3128',
+	'12.33.254.195:3128',
+	'23.227.190.22:1080'
+]
 proxy_good_counter = 0
 print(proxys)
 
@@ -307,7 +324,7 @@ for proxy in proxys:
 			'https': 'https://{}'.format(proxy),
 			'ftp': '{}'.format(proxy),
 		}
-		response = s.get(url, headers=headers, proxies=proxies, timeout=180)
+		response = s.get(url, headers=headers, proxies=proxies, timeout=15)
 		proxy_good_counter += 1
 		print("{} is working".format(proxy), response, response.content if response.status_code == 200 else '')
 
@@ -318,16 +335,36 @@ for proxy in proxys:
 		oks = False
 		print("{} ERROR: {}".format(proxy, detail))
 
-print("{}/{} proxy checked.".format(proxy_good_counter, len(proxys)))
+	s.cookies.clear()
+	s.close()
 	
-	# if oks:
-	# 	print("REQUESTING FOR {}".format(proxy))
+	if oks:
+		print("REQUESTING FOR {}".format(proxy))
+		for account in accounts:
+			try:
+				url = 'https://imgur.com/signin?redirect=http%3A%2F%2Fimgur.com%2F'
+				data = {
+					'username': account[0],
+					'password': account[1]
+				}
+				headers = {
+					# 'User-agent': 'Mozilla/5.0', 
+					'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36',
+					'referer': ''
+				}
+				proxies = {
+					'http': 'http://{}'.format(proxy),
+					'https': 'https://{}'.format(proxy),
+					'ftp': '{}'.format(proxy)
+				}
+				print("LOGIN: {} {} {}  {}".format(url, proxies, data, headers))
+				s = requests.session()
+				html = s.post(url, data, headers=headers, proxies=proxies, timeout=60)
+				html_tree = etree.HTML(html.content)
+				print(html, html.status_code, data, html_tree.xpath("//div[@class='dropdown-footer']"), html_tree.xpath("//div[@class='captcha']"))
+				s.cookies.clear()
+				s.close()
+			except Exception as e:
+				print("ERROR: {}".format(e))
 
-	# 	url = 'https://imgur.com/signin?redirect=http%3A%2F%2Fimgur.com%2F'
-
-	# 	for account in accounts:
-	# 		data = {
-	# 			'username': account[0],
-	# 			'password': account[1]
-	# 		}
-
+print("{}/{} proxy checked.".format(proxy_good_counter, len(proxys)))
